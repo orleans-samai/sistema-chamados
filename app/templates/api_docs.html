@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}API · Swagger{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3"><i class="bi bi-braces me-2"></i>Documentação da API REST</h1>
+<p class="text-body-secondary">
+  Obtenha um token em <code>POST /api/v1/auth/token</code> e clique em <strong>Authorize</strong>
+  para testar os endpoints autenticados.
+</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui.css">
+<div id="swagger-ui" class="card p-2"></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+<script>
+  SwaggerUIBundle({
+    url: "{{ url_for('api.openapi') }}",
+    dom_id: "#swagger-ui",
+    presets: [SwaggerUIBundle.presets.apis],
+    layout: "BaseLayout",
+  });
+</script>
+{% endblock %}

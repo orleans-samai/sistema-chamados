@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar cenário' if scenario else 'Novo cenário' }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <h1 class="h4 mb-4">
+      <i class="bi bi-mortarboard me-2"></i>
+      {{ 'Editar cenário de treinamento' if scenario else 'Novo cenário de treinamento' }}
+    </h1>
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" for="title">Título <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="title" name="title" required maxlength="200"
+                   value="{{ scenario.title if scenario else '' }}">
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">
+              <label class="form-label" for="area">Área</label>
+              <select class="form-select" id="area" name="area">
+                {% for a in ['Suporte técnico', 'Redes', 'Windows', 'Impressoras', 'Microsoft 365', 'Active Directory', 'Segurança da informação'] %}
+                <option value="{{ a }}" {{ 'selected' if scenario and scenario.area == a }}>{{ a }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="level">Nível</label>
+              <select class="form-select" id="level" name="level">
+                <option value="N1" {{ 'selected' if scenario and scenario.level == 'N1' }}>N1</option>
+                <option value="N2" {{ 'selected' if scenario and scenario.level == 'N2' }}>N2</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="priority">Prioridade do chamado</label>
+              <select class="form-select" id="priority" name="priority">
+                {% for p in TicketPriority.ALL %}
+                <option value="{{ p }}" {{ 'selected' if (scenario.priority if scenario else 'Média') == p }}>{{ p }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="category_id">Categoria do chamado</label>
+              <select class="form-select" id="category_id" name="category_id">
+                <option value="">Automática</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}" {{ 'selected' if scenario and scenario.category_id == c.id }}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="description">Descrição do cenário <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="description" name="description" rows="5" required
+                      placeholder="Texto que o analista verá como descrição do chamado simulado. Escreva como se fosse o usuário relatando o problema.">{{ scenario.description if scenario else '' }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="expected_solution">Gabarito (solução esperada)</label>
+            <textarea class="form-control" id="expected_solution" name="expected_solution" rows="4"
+                      placeholder="Passos esperados para resolver. Visível apenas para administradores.">{{ scenario.expected_solution if scenario and scenario.expected_solution else '' }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="hints">Dicas para o analista</label>
+            <textarea class="form-control" id="hints" name="hints" rows="2"
+                      placeholder="Dicas opcionais exibidas na página do cenário.">{{ scenario.hints if scenario and scenario.hints else '' }}</textarea>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="active" name="active"
+                   {{ 'checked' if not scenario or scenario.active }}>
+            <label class="form-check-label" for="active">Cenário ativo</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Salvar</button>
+            <a href="{{ url_for('lab.list_scenarios') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

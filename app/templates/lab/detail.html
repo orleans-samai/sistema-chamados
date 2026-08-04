@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, priority_badge with context %}
+{% block title %}{{ scenario.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('lab.list_scenarios') }}">Laboratório</a></li>
+    <li class="breadcrumb-item active">{{ scenario.title|truncate(40) }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 mb-1">{{ scenario.title }}</h1>
+    <div class="d-flex flex-wrap gap-1">
+      <span class="badge text-bg-info">{{ scenario.area }}</span>
+      <span class="badge text-bg-{{ 'secondary' if scenario.level == 'N1' else 'dark' }}">{{ scenario.level }}</span>
+      {{ priority_badge(scenario.priority) }}
+      {% if not scenario.active %}<span class="badge text-bg-warning">Inativo</span>{% endif %}
+    </div>
+  </div>
+  {% if current_user.is_admin %}
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('lab.edit_scenario', scenario_id=scenario.id) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+    <form method="post" action="{{ url_for('lab.delete_scenario', scenario_id=scenario.id) }}"
+          data-confirm="Excluir este cenário?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-card-text me-2"></i>Cenário (descrição do chamado simulado)</div>
+      <div class="card-body">{{ scenario.description|nl2br }}</div>
+    </div>
+
+    {% if scenario.hints %}
+    <div class="card mb-3 border-info">
+      <div class="card-header text-info"><i class="bi bi-lightbulb me-2"></i>Dicas para o analista</div>
+      <div class="card-body">{{ scenario.hints|nl2br }}</div>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_admin and scenario.expected_solution %}
+    <div class="card mb-3 border-dark">
+      <div class="card-header"><i class="bi bi-key me-2"></i>Gabarito (visível só para admins)</div>
+      <div class="card-body">{{ scenario.expected_solution|nl2br }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    {% if current_user.is_admin %}
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-play-circle me-2"></i>Gerar chamado simulado</div>
+      <div class="card-body">
+        {% if analysts %}
+        <form method="post" action="{{ url_for('lab.generate_ticket', scenario_id=scenario.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="form-label small mb-1">Analista em treinamento</label>
+          <select class="form-select form-select-sm mb-2" name="analyst_id" required>
+            <option value="">Selecione...</option>
+            {% for a in analysts %}
+            <option value="{{ a.id }}">{{ a.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-send me-1"></i>Gerar chamado
+          </button>
+        </form>
+        {% else %}
+        <p class="text-body-secondary mb-0">Cadastre analistas para gerar treinamentos.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-list-check me-2"></i>Chamados gerados ({{ generated|length }})</div>
+      <div class="list-group list-group-flush">
+        {% for t in generated %}
+        <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="list-group-item list-group-item-action">
+          <div class="d-flex justify-content-between">
+            <strong>{{ t.number }}</strong>
+            {{ status_badge(t.status) }}
+          </div>
+          <small class="text-body-secondary">{{ t.assignee.name if t.assignee }} · {{ t.created_at|d }}</small>
+        </a>
+        {% else %}
+        <div class="list-group-item text-body-secondary">Nenhum chamado gerado ainda.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

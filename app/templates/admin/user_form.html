@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar usuário' if user else 'Novo usuário' }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <h1 class="h4 mb-4">
+      <i class="bi {{ 'bi-pencil-square' if user else 'bi-person-plus' }} me-2"></i>
+      {{ 'Editar usuário' if user else 'Novo usuário' }}
+    </h1>
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" for="name">Nome completo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="name" name="name" required
+                   value="{{ user.name if user else request.form.get('name', '') }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="email">E-mail <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" required
+                   value="{{ user.email if user else request.form.get('email', '') }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="password">
+              Senha {% if user %}<small class="text-body-secondary">(deixe em branco para manter)</small>{% else %}<span class="text-danger">*</span>{% endif %}
+            </label>
+            <input type="password" class="form-control" id="password" name="password" minlength="6"
+                   {{ 'required' if not user }}>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="role_id">Perfil <span class="text-danger">*</span></label>
+              <select class="form-select" id="role_id" name="role_id" required>
+                {% for r in roles %}
+                <option value="{{ r.id }}" {{ 'selected' if user and user.role_id == r.id }}>{{ r.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="department_id">Departamento</label>
+              <select class="form-select" id="department_id" name="department_id">
+                <option value="">Nenhum</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}" {{ 'selected' if user and user.department_id == d.id }}>{{ d.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-check form-switch mt-3">
+            <input class="form-check-input" type="checkbox" id="active" name="active"
+                   {{ 'checked' if not user or user.active }}>
+            <label class="form-check-label" for="active">Conta ativa</label>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Salvar</button>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

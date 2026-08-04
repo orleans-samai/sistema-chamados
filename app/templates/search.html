@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, priority_badge with context %}
+{% block title %}Pesquisa{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4"><i class="bi bi-search me-2"></i>Resultados para "{{ q }}"</h1>
+
+{% if not q %}
+<p class="text-body-secondary">Digite um termo na barra de pesquisa acima.</p>
+{% else %}
+
+<div class="card mb-3">
+  <div class="card-header"><i class="bi bi-ticket-detailed me-2"></i>Chamados ({{ tickets|length }})</div>
+  <div class="list-group list-group-flush">
+    {% for t in tickets %}
+    <a href="{{ url_for('tickets.detail', ticket_id=t.id) }}" class="list-group-item list-group-item-action">
+      <div class="d-flex justify-content-between flex-wrap gap-1">
+        <span><strong>{{ t.number }}</strong> — {{ t.title }}</span>
+        <span>{{ priority_badge(t.priority) }} {{ status_badge(t.status) }}</span>
+      </div>
+    </a>
+    {% else %}
+    <div class="list-group-item text-body-secondary">Nenhum chamado encontrado.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header"><i class="bi bi-journal-text me-2"></i>Base de conhecimento ({{ articles|length }})</div>
+  <div class="list-group list-group-flush">
+    {% for a in articles %}
+    <a href="{{ url_for('kb.article', article_id=a.id) }}" class="list-group-item list-group-item-action">
+      <strong>{{ a.title }}</strong>
+      <span class="badge text-bg-primary ms-1">{{ a.article_type }}</span>
+      {% if a.summary %}<div class="text-body-secondary small">{{ a.summary }}</div>{% endif %}
+    </a>
+    {% else %}
+    <div class="list-group-item text-body-secondary">Nenhum artigo encontrado.</div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if current_user.is_admin %}
+<div class="card">
+  <div class="card-header"><i class="bi bi-people me-2"></i>Usuários ({{ users|length }})</div>
+  <div class="list-group list-group-flush">
+    {% for u in users %}
+    <a href="{{ url_for('admin.edit_user', user_id=u.id) }}" class="list-group-item list-group-item-action">
+      <strong>{{ u.name }}</strong> — {{ u.email }}
+      <span class="badge text-bg-secondary ms-1">{{ u.role.label }}</span>
+    </a>
+    {% else %}
+    <div class="list-group-item text-body-secondary">Nenhum usuário encontrado.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

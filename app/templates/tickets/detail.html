@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, priority_badge, sla_badge, stars with context %}
+{% block title %}{{ ticket.number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 mb-1">
+      {{ ticket.number }}
+      {% if ticket.is_training %}<span class="badge text-bg-dark">TREINAMENTO</span>{% endif %}
+    </h1>
+    <div class="text-body-secondary">{{ ticket.title }}</div>
+  </div>
+  <div class="d-flex gap-2 align-items-center flex-wrap">
+    {{ priority_badge(ticket.priority) }}
+    {{ status_badge(ticket.status) }}
+    {{ sla_badge(ticket) }}
+    {% if can_manage or (ticket.requester_id == current_user.id and ticket.status == TicketStatus.ABERTO) %}
+    <a href="{{ url_for('tickets.edit', ticket_id=ticket.id) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-card-text me-2"></i>Descrição</div>
+      <div class="card-body">{{ ticket.description|nl2br }}</div>
+    </div>
+
+    {% if ticket.solution %}
+    <div class="card mb-3 border-success">
+      <div class="card-header text-success"><i class="bi bi-check-circle me-2"></i>Solução</div>
+      <div class="card-body">{{ ticket.solution|nl2br }}</div>
+    </div>
+    {% endif %}
+
+    {% if ticket.is_training and ticket.lab_scenario and current_user.is_admin %}
+    <div class="card mb-3 border-dark">
+      <div class="card-header"><i class="bi bi-mortarboard me-2"></i>Gabarito do cenário (visível só para admins)</div>
+      <div class="card-body">{{ ticket.lab_scenario.expected_solution|nl2br }}</div>
+    </div>
+    {% endif %}
+
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-chat-dots me-2"></i>Comentários ({{ comments|length }})</span>
+        {% if current_user.is_staff %}<small class="text-body-secondary">Internos têm fundo amarelo e ficam ocultos ao solicitante</small>{% endif %}
+      </div>
+      <div class="card-body">
+        {% for c in comments %}
+        <div class="comment {{ 'comment-internal' if c.is_internal }}">
+          <div class="d-flex justify-content-between flex-wrap gap-1">
+            <strong>{{ c.user.name if c.user }}
+              {% if c.is_internal %}<span class="badge text-bg-warning ms-1">Interno</span>{% endif %}
+            </strong>
+            <small class="text-body-secondary">{{ c.created_at|dt }}</small>
+          </div>
+          <div class="mt-1">{{ c.content|nl2br }}</div>
+        </div>
+        {% else %}
+        <p class="text-body-secondary mb-0">Nenhum comentário ainda.</p>
+        {% endfor %}
+
+        <hr>
+        <form method="post" action="{{ url_for('tickets.comment', ticket_id=ticket.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-2">
+            <textarea class="form-control" name="content" rows="3" required placeholder="Escreva um comentário..."></textarea>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            {% if current_user.is_staff %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="is_internal" name="is_internal">
+              <label class="form-check-label" for="is_internal">Comentário interno</label>
+            </div>
+            {% else %}<span></span>{% endif %}
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send me-1"></i>Enviar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-paperclip me-2"></i>Anexos ({{ ticket.attachments|length }})</div>
+      <div class="card-body">
+        {% for a in ticket.attachments %}
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+          <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}">
+            <i class="bi bi-file-earmark me-1"></i>{{ a.filename }}
+          </a>
+          <small class="text-body-secondary">{{ a.size_label }} · {{ a.uploaded_by.name if a.uploaded_by }} · {{ a.created_at|dt }}</small>
+        </div>
+        {% else %}
+        <p class="text-body-secondary mb-2">Nenhum anexo.</p>
+        {% endfor %}
+        <form method="post" action="{{ url_for('tickets.attach', ticket_id=ticket.id) }}"
+              enctype="multipart/form-data" class="d-flex gap-2 mt-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="file" class="form-control form-control-sm" name="attachments" multiple required>
+          <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap">
+            <i class="bi bi-upload me-1"></i>Anexar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-clock-history me-2"></i>Histórico de atividades</div>
+      <div class="card-body">
+        <div class="timeline">
+          {% for h in ticket.history %}
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div>
+              <div class="d-flex justify-content-between flex-wrap gap-1">
+                <strong>{{ h.action }}</strong>
+                <small class="text-body-secondary">{{ h.created_at|dt }}</small>
+              </div>
+              <small class="text-body-secondary">
+                {{ h.user.name if h.user else 'Sistema' }}
+                {% if h.field and h.old_value %} — {{ h.field }}: {{ h.old_value }} → {{ h.new_value }}
+                {% elif h.field and h.new_value %} — {{ h.field }}: {{ h.new_value }}{% endif %}
+              </small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Detalhes</div>
+      <div class="card-body detail-list">
+        <div><span>Categoria</span><strong>{{ ticket.category.name if ticket.category }}</strong></div>
+        <div><span>Subcategoria</span><strong>{{ ticket.subcategory.name if ticket.subcategory else '—' }}</strong></div>
+        <div><span>Solicitante</span><strong>{{ ticket.requester.name if ticket.requester }}</strong></div>
+        <div><span>Analista</span><strong>{{ ticket.assignee.name if ticket.assignee else 'Não atribuído' }}</strong></div>
+        <div><span>Abertura</span><strong>{{ ticket.created_at|dt }}</strong></div>
+        <div><span>Atualização</span><strong>{{ ticket.updated_at|dt }}</strong></div>
+        <div><span>Prazo resposta</span><strong>{{ ticket.response_due_at|dt }}</strong></div>
+        <div><span>Prazo resolução</span><strong>{{ ticket.resolution_due_at|dt }}</strong></div>
+        {% if ticket.first_response_at %}<div><span>1ª resposta</span><strong>{{ ticket.first_response_at|dt }}</strong></div>{% endif %}
+        {% if ticket.resolved_at %}<div><span>Resolvido em</span><strong>{{ ticket.resolved_at|dt }}</strong></div>{% endif %}
+        {% if ticket.closed_at %}<div><span>Encerrado em</span><strong>{{ ticket.closed_at|dt }}</strong></div>{% endif %}
+      </div>
+    </div>
+
+    {% if current_user.is_staff %}
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-lightning me-2"></i>Ações</div>
+      <div class="card-body d-grid gap-3">
+        {% if not ticket.assignee or ticket.assignee_id != current_user.id %}
+        <form method="post" action="{{ url_for('tickets.take', ticket_id=ticket.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-primary w-100">
+            <i class="bi bi-person-check me-1"></i>Assumir chamado
+          </button>
+        </form>
+        {% endif %}
+
+        {% if current_user.is_admin and analysts %}
+        <form method="post" action="{{ url_for('tickets.assign', ticket_id=ticket.id) }}" class="d-flex gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <select class="form-select form-select-sm" name="assignee_id" required>
+            <option value="">Atribuir a...</option>
+            {% for a in analysts %}
+            <option value="{{ a.id }}" {{ 'selected' if ticket.assignee_id == a.id }}>{{ a.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-outline-secondary btn-sm">OK</button>
+        </form>
+        {% endif %}
+
+        {% if can_manage %}
+        <form method="post" action="{{ url_for('tickets.change_status', ticket_id=ticket.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="form-label small mb-1">Alterar status</label>
+          <select class="form-select form-select-sm mb-2" name="status" id="novo-status">
+            {% for s in TicketStatus.ALL %}
+            <option value="{{ s }}" {{ 'selected' if ticket.status == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <div id="solution-box" class="mb-2 {{ 'd-none' if not ticket.solution }}">
+            <label class="form-label small mb-1">Solução aplicada</label>
+            <textarea class="form-control form-control-sm" name="solution" rows="3"
+                      placeholder="Descreva a solução...">{{ ticket.solution or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-arrow-repeat me-1"></i>Atualizar status
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-star me-2"></i>Avaliação do atendimento</div>
+      <div class="card-body">
+        {% if ticket.rating %}
+        <div class="fs-5">{{ stars(ticket.rating) }} <span class="ms-1">{{ ticket.rating }}/5</span></div>
+        {% if ticket.rating_comment %}<p class="text-body-secondary mt-2 mb-0">"{{ ticket.rating_comment }}"</p>{% endif %}
+        {% elif ticket.requester_id == current_user.id and ticket.status in (TicketStatus.RESOLVIDO, TicketStatus.FECHADO) %}
+        <form method="post" action="{{ url_for('tickets.rate', ticket_id=ticket.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="rating-stars mb-2">
+            {% for i in range(5, 0, -1) %}
+            <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
+            <label for="star{{ i }}" title="{{ i }} estrela(s)"><i class="bi bi-star-fill"></i></label>
+            {% endfor %}
+          </div>
+          <textarea class="form-control form-control-sm mb-2" name="comment" rows="2"
+                    placeholder="Comentário (opcional)"></textarea>
+          <button type="submit" class="btn btn-success btn-sm w-100">Enviar avaliação</button>
+        </form>
+        {% else %}
+        <p class="text-body-secondary mb-0">Disponível para o solicitante após a resolução.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

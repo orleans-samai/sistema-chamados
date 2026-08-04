@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination %}
+{% block title %}Base de conhecimento{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-journal-text me-2"></i>Base de conhecimento</h1>
+  {% if current_user.is_staff %}
+  <a href="{{ url_for('kb.new_article') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-circle me-1"></i> Novo artigo
+  </a>
+  {% endif %}
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small mb-1">Buscar por palavras-chave</label>
+        <input type="search" name="q" value="{{ q }}" class="form-control form-control-sm"
+               placeholder="Ex.: vpn, impressora, outlook...">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1">Tipo</label>
+        <select name="tipo" class="form-select form-select-sm">
+          <option value="">Todos</option>
+          {% for t in ['Artigo', 'Tutorial', 'FAQ'] %}
+          <option value="{{ t }}" {{ 'selected' if tipo == t }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1">Categoria</label>
+        <select name="categoria" class="form-select form-select-sm">
+          <option value="">Todas</option>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {{ 'selected' if categoria == c.id }}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm flex-fill">Buscar</button>
+        <a href="{{ url_for('kb.list_articles') }}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% for a in articles %}
+<div class="card mb-2">
+  <div class="card-body py-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <a href="{{ url_for('kb.article', article_id=a.id) }}" class="h6 mb-1 d-block">{{ a.title }}</a>
+        <small class="text-body-secondary">{{ a.summary or '' }}</small>
+        <div class="mt-2 d-flex flex-wrap gap-1">
+          <span class="badge text-bg-primary">{{ a.article_type }}</span>
+          {% if a.category %}<span class="badge text-bg-secondary">{{ a.category.name }}</span>{% endif %}
+          {% for tag in a.tag_list %}
+          <a href="{{ url_for('kb.list_articles', tag=tag) }}" class="badge text-bg-light border text-decoration-none">#{{ tag }}</a>
+          {% endfor %}
+          {% if not a.published %}<span class="badge text-bg-warning">Rascunho</span>{% endif %}
+        </div>
+      </div>
+      <small class="text-body-secondary text-nowrap">
+        <i class="bi bi-eye me-1"></i>{{ a.views }} · {{ a.updated_at|d }}
+      </small>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body text-center text-body-secondary py-4">Nenhum artigo encontrado.</div></div>
+{% endfor %}
+{{ render_pagination(pagination, 'kb.list_articles') }}
+{% endblock %}

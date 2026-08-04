@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('kb.list_articles') }}">Base de conhecimento</a></li>
+        <li class="breadcrumb-item active">{{ article.title|truncate(40) }}</li>
+      </ol>
+    </nav>
+
+    <div class="card">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <h1 class="h4 mb-2">{{ article.title }}</h1>
+            <div class="d-flex flex-wrap gap-1">
+              <span class="badge text-bg-primary">{{ article.article_type }}</span>
+              {% if article.category %}<span class="badge text-bg-secondary">{{ article.category.name }}</span>{% endif %}
+              {% for tag in article.tag_list %}
+              <a href="{{ url_for('kb.list_articles', tag=tag) }}" class="badge text-bg-light border text-decoration-none">#{{ tag }}</a>
+              {% endfor %}
+            </div>
+          </div>
+          {% if current_user.is_staff %}
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('kb.edit_article', article_id=article.id) }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            {% if current_user.is_admin %}
+            <form method="post" action="{{ url_for('kb.delete_article', article_id=article.id) }}"
+                  data-confirm="Excluir este artigo?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+            </form>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% if article.summary %}<p class="lead fs-6 text-body-secondary">{{ article.summary }}</p>{% endif %}
+        <hr>
+        <div class="kb-content">{{ article.content|nl2br }}</div>
+        <hr>
+        <small class="text-body-secondary">
+          Por {{ article.author.name if article.author else '—' }} ·
+          atualizado em {{ article.updated_at|dt }} · {{ article.views }} visualização(ões)
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

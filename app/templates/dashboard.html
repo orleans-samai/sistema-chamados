@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, priority_badge, sla_badge with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+  <a href="{{ url_for('tickets.new_ticket') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i> Abrir chamado
+  </a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card border-start border-4 border-primary h-100">
+      <div class="card-body">
+        <div class="stat-label">Total de chamados</div>
+        <div class="stat-value">{{ cards.total }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card border-start border-4 border-info h-100">
+      <div class="card-body">
+        <div class="stat-label">Abertos</div>
+        <div class="stat-value">{{ cards.abertos }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card border-start border-4 border-success h-100">
+      <div class="card-body">
+        <div class="stat-label">Resolvidos / Fechados</div>
+        <div class="stat-value">{{ cards.fechados }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card border-start border-4 border-danger h-100">
+      <div class="card-body">
+        <div class="stat-label">Críticos abertos</div>
+        <div class="stat-value">{{ cards.criticos }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if cards.tempo_medio %}
+<div class="alert alert-light border d-flex align-items-center gap-2">
+  <i class="bi bi-clock-history fs-5 text-primary"></i>
+  <span>Tempo médio de resolução: <strong>{{ cards.tempo_medio }}</strong></span>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Chamados por status</div>
+      <div class="card-body chart-box"><canvas id="chart-status"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Chamados por categoria</div>
+      <div class="card-body chart-box"><canvas id="chart-categoria"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-graph-up me-2"></i>Evolução mensal</div>
+      <div class="card-body chart-box"><canvas id="chart-mensal"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-person-badge me-2"></i>Chamados por analista</div>
+      <div class="card-body chart-box">
+        {% if charts.analista.labels %}
+        <canvas id="chart-analista"></canvas>
+        {% else %}
+        <p class="text-body-secondary mb-0">Nenhum chamado atribuído ainda.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if sla_alerts %}
+<div class="card border-danger mb-4">
+  <div class="card-header text-danger">
+    <i class="bi bi-exclamation-triangle me-2"></i>Alertas de SLA ({{ sla_alerts|length }})
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Número</th><th>Título</th><th>Prioridade</th><th>Status</th><th>SLA</th><th>Prazo</th></tr>
+      </thead>
+      <tbody>
+        {% for t in sla_alerts %}
+        <tr>
+          <td><a href="{{ url_for('tickets.detail', ticket_id=t.id) }}">{{ t.number }}</a></td>
+          <td>{{ t.title }}</td>
+          <td>{{ priority_badge(t.priority) }}</td>
+          <td>{{ status_badge(t.status) }}</td>
+          <td>{{ sla_badge(t) }}</td>
+          <td>{{ t.resolution_due_at|dt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const CHARTS = {{ charts | tojson }};
+  const PALETTE = ["#3b82f6", "#06b6d4", "#f59e0b", "#22c55e", "#6b7280", "#ef4444", "#a855f7", "#14b8a6"];
+
+  new Chart(document.getElementById("chart-status"), {
+    type: "doughnut",
+    data: {
+      labels: CHARTS.status.labels,
+      datasets: [{ data: CHARTS.status.data, backgroundColor: PALETTE }]
+    },
+    options: { maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+  });
+
+  new Chart(document.getElementById("chart-categoria"), {
+    type: "bar",
+    data: {
+      labels: CHARTS.categoria.labels,
+      datasets: [{ label: "Chamados", data: CHARTS.categoria.data, backgroundColor: "#3b82f6" }]
+    },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+
+  new Chart(document.getElementById("chart-mensal"), {
+    type: "line",
+    data: {
+      labels: CHARTS.mensal.labels,
+      datasets: [
+        { label: "Abertos", data: CHARTS.mensal.abertos, borderColor: "#3b82f6", backgroundColor: "#3b82f680", tension: 0.3 },
+        { label: "Resolvidos", data: CHARTS.mensal.resolvidos, borderColor: "#22c55e", backgroundColor: "#22c55e80", tension: 0.3 }
+      ]
+    },
+    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+
+  if (document.getElementById("chart-analista")) {
+    new Chart(document.getElementById("chart-analista"), {
+      type: "bar",
+      data: {
+        labels: CHARTS.analista.labels,
+        datasets: [{ label: "Chamados", data: CHARTS.analista.data, backgroundColor: "#06b6d4" }]
+      },
+      options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } },
+                 scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  }
+</script>
+{% endblock %}

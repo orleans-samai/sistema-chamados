@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination %}
+{% block title %}Notificações{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-bell me-2"></i>Notificações</h1>
+  <form method="post" action="{{ url_for('notifications.read_all') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-check2-all me-1"></i>Marcar todas como lidas
+    </button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="list-group list-group-flush">
+    {% for n in pagination.items %}
+    <a href="{{ url_for('notifications.read', notification_id=n.id) }}"
+       class="list-group-item list-group-item-action {{ 'notification-unread' if not n.read }}">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div>
+          <strong>{{ n.title }}</strong>
+          {% if not n.read %}<span class="badge text-bg-primary ms-1">Nova</span>{% endif %}
+          <div class="text-body-secondary small">{{ n.message }}</div>
+        </div>
+        <small class="text-body-secondary text-nowrap">{{ n.created_at|dt }}</small>
+      </div>
+    </a>
+    {% else %}
+    <div class="list-group-item text-center text-body-secondary py-4">Nenhuma notificação.</div>
+    {% endfor %}
+  </div>
+</div>
+{{ render_pagination(pagination, 'notifications.list_notifications') }}
+{% endblock %}

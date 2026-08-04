@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar artigo' if article else 'Novo artigo' }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <h1 class="h4 mb-4">
+      <i class="bi {{ 'bi-pencil-square' if article else 'bi-plus-circle' }} me-2"></i>
+      {{ 'Editar artigo' if article else 'Novo artigo' }}
+    </h1>
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" for="title">Título <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="title" name="title" required maxlength="200"
+                   value="{{ article.title if article else '' }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="summary">Resumo</label>
+            <input type="text" class="form-control" id="summary" name="summary" maxlength="500"
+                   value="{{ article.summary if article and article.summary else '' }}"
+                   placeholder="Uma frase descrevendo o artigo">
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label" for="article_type">Tipo</label>
+              <select class="form-select" id="article_type" name="article_type">
+                {% for t in ['Artigo', 'Tutorial', 'FAQ'] %}
+                <option value="{{ t }}" {{ 'selected' if article and article.article_type == t }}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="category_id">Categoria</label>
+              <select class="form-select" id="category_id" name="category_id">
+                <option value="">Nenhuma</option>
+                {% for c in categories %}
+                <option value="{{ c.id }}" {{ 'selected' if article and article.category_id == c.id }}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="tags">Tags</label>
+              <input type="text" class="form-control" id="tags" name="tags"
+                     value="{{ article.tags if article and article.tags else '' }}"
+                     placeholder="vpn, rede, acesso (separadas por vírgula)">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="content">Conteúdo <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="content" name="content" rows="12" required>{{ article.content if article else '' }}</textarea>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="published" name="published"
+                   {{ 'checked' if not article or article.published }}>
+            <label class="form-check-label" for="published">Publicado (visível para todos os usuários)</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Salvar</button>
+            <a href="{{ url_for('kb.list_articles') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

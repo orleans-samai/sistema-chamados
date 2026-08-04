@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination %}
+{% block title %}Auditoria{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4"><i class="bi bi-shield-check me-2"></i>Logs de auditoria</h1>
+
+<form method="get" class="row g-2 mb-3" style="max-width: 640px;">
+  <div class="col-md-4">
+    <select name="acao" class="form-select form-select-sm">
+      <option value="">Todas as ações</option>
+      {% for a in actions %}
+      <option value="{{ a }}" {{ 'selected' if request.args.get('acao') == a }}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <select name="entidade" class="form-select form-select-sm">
+      <option value="">Todas as entidades</option>
+      {% for e in entities %}
+      <option value="{{ e }}" {{ 'selected' if request.args.get('entidade') == e }}>{{ e }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4 d-flex gap-2">
+    <button type="submit" class="btn btn-outline-primary btn-sm flex-fill">Filtrar</button>
+    <a href="{{ url_for('admin.audit') }}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Detalhes</th><th>IP</th></tr>
+      </thead>
+      <tbody>
+        {% for log in pagination.items %}
+        <tr>
+          <td class="text-nowrap">{{ log.created_at|dt }}</td>
+          <td>{{ log.user.name if log.user else 'Sistema' }}</td>
+          <td><span class="badge text-bg-light border">{{ log.action }}</span></td>
+          <td>{{ log.entity or '—' }}{% if log.entity_id %} #{{ log.entity_id }}{% endif %}</td>
+          <td>{{ log.details or '—' }}</td>
+          <td><small class="text-body-secondary">{{ log.ip or '—' }}</small></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-body-secondary py-4">Nenhum registro.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{ render_pagination(pagination, 'admin.audit') }}
+{% endblock %}

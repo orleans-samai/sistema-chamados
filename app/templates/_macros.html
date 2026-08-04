@@ -1,0 +1,44 @@
+{# Macros reutilizáveis #}
+
+{% macro render_pagination(pagination, endpoint) %}
+{% if pagination.pages > 1 %}
+{% set args = request.args.to_dict() %}
+{% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
+<nav aria-label="Paginação">
+  <ul class="pagination pagination-sm justify-content-center mt-3">
+    <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+      <a class="page-link" href="{{ url_for(endpoint, page=pagination.prev_num, **args) if pagination.has_prev else '#' }}">&laquo;</a>
+    </li>
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+      <li class="page-item {{ 'active' if p == pagination.page }}">
+        <a class="page-link" href="{{ url_for(endpoint, page=p, **args) }}">{{ p }}</a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+      <a class="page-link" href="{{ url_for(endpoint, page=pagination.next_num, **args) if pagination.has_next else '#' }}">&raquo;</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro status_badge(status) %}
+<span class="badge text-bg-{{ TicketStatus.BADGES.get(status, 'secondary') }}">{{ status }}</span>
+{% endmacro %}
+
+{% macro priority_badge(priority) %}
+<span class="badge text-bg-{{ TicketPriority.BADGES.get(priority, 'secondary') }}">{{ priority }}</span>
+{% endmacro %}
+
+{% macro sla_badge(ticket) %}
+{% set sla = ticket.sla %}
+<span class="badge text-bg-{{ sla.css }}" title="Prazo de resolução: {{ ticket.resolution_due_at|dt }}">{{ sla.label }}</span>
+{% endmacro %}
+
+{% macro stars(value) %}
+{% for i in range(1, 6) %}<i class="bi {{ 'bi-star-fill text-warning' if value and i <= value else 'bi-star text-body-tertiary' }}"></i>{% endfor %}
+{% endmacro %}

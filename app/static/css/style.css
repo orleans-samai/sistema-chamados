@@ -1,0 +1,340 @@
+/* ===== Service Desk — layout e temas ===== */
+
+:root {
+  --sd-sidebar-width: 260px;
+  --sd-sidebar-bg: #1f2a3d;
+  --sd-sidebar-color: #cbd5e1;
+  --sd-sidebar-active: #3b82f6;
+  --sd-topbar-height: 60px;
+}
+
+[data-bs-theme="dark"] {
+  --sd-sidebar-bg: #11161f;
+  --bs-body-bg: #181d27;
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* ---------- Layout geral ---------- */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: 1.5rem;
+  flex: 1;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: var(--sd-sidebar-width);
+  background: var(--sd-sidebar-bg);
+  color: var(--sd-sidebar-color);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: transform 0.25s ease;
+  z-index: 1040;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-brand i {
+  font-size: 1.4rem;
+  color: var(--sd-sidebar-active);
+}
+
+.sidebar-nav {
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--sd-sidebar-color);
+  text-decoration: none;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.925rem;
+}
+
+.sidebar-nav a:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.sidebar-nav a.active {
+  background: var(--sd-sidebar-active);
+  color: #fff;
+}
+
+.sidebar-section {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0.9rem 0.85rem 0.25rem;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  height: var(--sd-topbar-height);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem;
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.topbar .btn-link {
+  color: var(--bs-body-color);
+  text-decoration: none;
+}
+
+.sidebar-toggle {
+  display: none;
+}
+
+.topbar-search {
+  flex: 1;
+  max-width: 420px;
+  position: relative;
+}
+
+.topbar-search i {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--bs-secondary-color);
+}
+
+.topbar-search input {
+  padding-left: 2.2rem;
+  border-radius: 2rem;
+}
+
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sd-sidebar-active);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.notification-menu {
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* ---------- Login ---------- */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1f2a3d 0%, #2b3c5a 100%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border: 0;
+  border-radius: 1rem;
+}
+
+.auth-alert {
+  width: 100%;
+  max-width: 640px;
+  word-break: break-all;
+}
+
+/* ---------- Dashboard ---------- */
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-secondary-color);
+}
+
+.stat-card .stat-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.chart-box {
+  height: 280px;
+  position: relative;
+}
+
+/* ---------- Detalhe do chamado ---------- */
+.detail-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--bs-border-color);
+  font-size: 0.9rem;
+}
+
+.detail-list > div:last-child {
+  border-bottom: 0;
+}
+
+.detail-list span {
+  color: var(--bs-secondary-color);
+}
+
+.comment {
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.comment-internal {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ---------- Timeline ---------- */
+.timeline {
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--bs-border-color);
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -1.25rem;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sd-sidebar-active);
+  border: 2px solid var(--bs-body-bg);
+}
+
+/* ---------- Avaliação por estrelas ---------- */
+.rating-stars {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  font-size: 1.5rem;
+}
+
+.rating-stars input {
+  display: none;
+}
+
+.rating-stars label {
+  cursor: pointer;
+  color: var(--bs-secondary-color);
+}
+
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+  color: #f59e0b;
+}
+
+/* ---------- Notificações ---------- */
+.notification-unread {
+  border-left: 3px solid var(--sd-sidebar-active);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1035;
+  }
+
+  .sidebar-toggle {
+    display: inline-flex;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+}
